@@ -19,7 +19,6 @@ CREATE TABLE Products (
   FOREIGN KEY (category_id) REFERENCES Categories(id)
 );
 
-
 -- PartTypes represent the types of parts that can be customized
 CREATE TABLE PartTypes (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -76,6 +75,25 @@ CREATE TABLE RuleConditions (
   FOREIGN KEY (rule_id) REFERENCES IncompatibilityRules(id),
   FOREIGN KEY (part_option_id) REFERENCES PartOptions(id),
   FOREIGN KEY (incompatible_with_part_option_id) REFERENCES PartOptions(id)
+);
+
+-- PricingRules defines special pricing for combinations of parts
+CREATE TABLE PricingRules (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name VARCHAR(255) NOT NULL,
+  description TEXT,
+  price_adjustment DECIMAL(10, 2) NOT NULL,
+  is_percentage BOOLEAN DEFAULT FALSE,
+  active BOOLEAN DEFAULT TRUE
+);
+
+-- PricingRuleConditions defines when a pricing rule is applied
+CREATE TABLE PricingRuleConditions (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  pricing_rule_id INTEGER NOT NULL,
+  part_option_id INTEGER NOT NULL,
+  FOREIGN KEY (pricing_rule_id) REFERENCES PricingRules(id),
+  FOREIGN KEY (part_option_id) REFERENCES PartOptions(id)
 );
 
 -- Customers table for user accounts

@@ -3,10 +3,12 @@
  *
  * Handles cart, checkout, and order management functionality
  */
+const ProductConfigurationService = require('./product_configuration');
 
 class OrderService {
   constructor(database) {
     this.database = database;
+    this.productConfigService = new ProductConfigurationService(database);
   }
 
   /**
@@ -16,23 +18,43 @@ class OrderService {
    * @param {number} productId - The product being added
    * @param {Array} selectedOptions - Selected part options
    * @param {number} quantity - Number of items to add
-   * @param {number} price - Total price of the product
    * @returns {Object} Result of the operation
    */
-  async addToCart(customerId, productId, selectedOptions, quantity = 1, price) {
-    // Get or create cart for this customer
+  async addToCart(customerId, productId, selectedOptions, quantity = 1) {
+    // 1. Validate the configuration first
+    const validationResult =
+      await this.productConfigService.validateConfiguration(
+        productId,
+        selectedOptions
+      );
+
+    if (!validationResult.valid) {
+      return {
+        success: false,
+        message: validationResult.message,
+        details: validationResult,
+      };
+    }
+
+    // 2. Calculate the price for this configuration
+    const pricing = await this.productConfigService.calculateTotalPrice(
+      productId,
+      selectedOptions
+    );
+
+    // 3. Get or create cart for this customer
     let cart = await this.getOrCreateCart(customerId);
 
-    // Add item to cart
+    // 4. Add item to cart
     const cartItem = await this.database.query(
       `INSERT INTO OrderItems 
          (order_id, product_id, quantity, price) 
        VALUES (?, ?, ?, ?)
        RETURNING id`,
-      [cart.id, productId, quantity, price]
+      [cart.id, productId, quantity, pricing.totalPrice]
     );
 
-    // Save the configuration for this cart item
+    // 5. Save the configuration for this cart item
     for (const option of selectedOptions) {
       await this.database.query(
         `INSERT INTO OrderItemConfiguration
@@ -42,7 +64,7 @@ class OrderService {
       );
     }
 
-    // Update cart total
+    // 6. Update cart total
     await this.updateCartTotal(cart.id);
 
     return {
