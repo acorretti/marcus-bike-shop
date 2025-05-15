@@ -52,6 +52,38 @@ async function seedDatabase() {
         ]
       );
     }
+
+    // Insert part types
+    for (const partType of exampleData.partTypes) {
+      await db.query(
+        'INSERT INTO PartTypes (id, name, description, required) VALUES (?, ?, ?, ?)',
+        [partType.id, partType.name, partType.description, partType.required]
+      );
+    }
+
+    // Insert product part types
+    for (const ppt of exampleData.productPartTypes) {
+      await db.query(
+        'INSERT INTO ProductPartTypes (product_id, part_type_id, display_order) VALUES (?, ?, ?)',
+        [ppt.product_id, ppt.part_type_id, ppt.display_order]
+      );
+    }
+
+    // Insert part options
+    for (const option of exampleData.partOptions) {
+      await db.query(
+        'INSERT INTO PartOptions (id, part_type_id, name, description, base_price, active) VALUES (?, ?, ?, ?, ?, ?)',
+        [
+          option.id,
+          option.part_type_id,
+          option.name,
+          option.description,
+          option.base_price,
+          option.active,
+        ]
+      );
+    }
+
     console.debug('Database seeded successfully!'.green);
   } catch (error) {
     console.error('Error seeding database'.red, error);

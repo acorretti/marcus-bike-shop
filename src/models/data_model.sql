@@ -20,6 +20,35 @@ CREATE TABLE Products (
 );
 
 
+-- PartTypes represent the types of parts that can be customized
+CREATE TABLE PartTypes (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name VARCHAR(255) NOT NULL,
+  description TEXT,
+  required BOOLEAN DEFAULT TRUE
+);
+
+-- ProductPartTypes links products to relevant part types
+CREATE TABLE ProductPartTypes (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  product_id INTEGER NOT NULL,
+  part_type_id INTEGER NOT NULL,
+  display_order INTEGER,
+  FOREIGN KEY (product_id) REFERENCES Products(id),
+  FOREIGN KEY (part_type_id) REFERENCES PartTypes(id)
+);
+
+-- PartOptions represent the specific options for each part type
+CREATE TABLE PartOptions (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  part_type_id INTEGER NOT NULL,
+  name VARCHAR(255) NOT NULL,
+  description TEXT,
+  base_price DECIMAL(10, 2) NOT NULL,
+  active BOOLEAN DEFAULT TRUE,
+  FOREIGN KEY (part_type_id) REFERENCES PartTypes(id)
+);
+
 -- Customers table for user accounts
 CREATE TABLE Customers (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -52,4 +81,13 @@ CREATE TABLE OrderItems (
   price DECIMAL(10, 2) NOT NULL,
   FOREIGN KEY (order_id) REFERENCES Orders(id),
   FOREIGN KEY (product_id) REFERENCES Products(id)
+);
+
+-- OrderItemConfiguration represents the selected part options for an order item
+CREATE TABLE OrderItemConfiguration (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  order_item_id INTEGER NOT NULL,
+  part_option_id INTEGER NOT NULL,
+  FOREIGN KEY (order_item_id) REFERENCES OrderItems(id),
+  FOREIGN KEY (part_option_id) REFERENCES PartOptions(id)
 );

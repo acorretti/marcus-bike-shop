@@ -14,11 +14,12 @@ class OrderService {
    *
    * @param {number} customerId - The customer ID
    * @param {number} productId - The product being added
+   * @param {Array} selectedOptions - Selected part options
    * @param {number} quantity - Number of items to add
    * @param {number} price - Total price of the product
    * @returns {Object} Result of the operation
    */
-  async addToCart(customerId, productId, quantity = 1, price) {
+  async addToCart(customerId, productId, selectedOptions, quantity = 1, price) {
     // Get or create cart for this customer
     let cart = await this.getOrCreateCart(customerId);
 
@@ -30,6 +31,16 @@ class OrderService {
        RETURNING id`,
       [cart.id, productId, quantity, price]
     );
+
+    // Save the configuration for this cart item
+    for (const option of selectedOptions) {
+      await this.database.query(
+        `INSERT INTO OrderItemConfiguration
+           (order_item_id, part_option_id)
+         VALUES (?, ?)`,
+        [cartItem.id, option.partOptionId]
+      );
+    }
 
     // Update cart total
     await this.updateCartTotal(cart.id);
@@ -112,6 +123,20 @@ class OrderService {
        WHERE oi.order_id = ?`,
       [cart.id]
     );
+
+    // Get configuration details for each item
+    for (const item of items) {
+      const configuration = await this.database.query(
+        `SELECT oic.part_option_id, po.name as option_name, pt.name as part_type
+         FROM OrderItemConfiguration oic
+         JOIN PartOptions po ON oic.part_option_id = po.id
+         JOIN PartTypes pt ON po.part_type_id = pt.id
+         WHERE oic.order_item_id = ?`,
+        [item.id]
+      );
+
+      item.configuration = configuration;
+    }
 
     return {
       id: cart.id,

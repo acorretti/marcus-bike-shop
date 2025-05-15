@@ -41,8 +41,179 @@ const products = [
   },
 ];
 
+// Sample Part Types
+const partTypes = [
+  {
+    id: 1,
+    name: 'Frame Type',
+    description: 'The main structure of the bicycle',
+    required: 1,
+  },
+  {
+    id: 2,
+    name: 'Frame Finish',
+    description: 'Surface treatment and color of the frame',
+    required: 1,
+  },
+  {
+    id: 3,
+    name: 'Wheels',
+    description: 'Type of wheels that determine the riding surface',
+    required: 1,
+  },
+  {
+    id: 4,
+    name: 'Rim Color',
+    description: 'Color of the wheel rims',
+    required: 1,
+  },
+  {
+    id: 5,
+    name: 'Chain',
+    description: 'Type of chain that affects gearing',
+    required: 1,
+  },
+];
+
+// Map products to their part types
+const productPartTypes = [
+  // Adventure Bike parts
+  { product_id: 1, part_type_id: 1, display_order: 1 },
+  { product_id: 1, part_type_id: 2, display_order: 2 },
+  { product_id: 1, part_type_id: 3, display_order: 3 },
+  { product_id: 1, part_type_id: 4, display_order: 4 },
+  { product_id: 1, part_type_id: 5, display_order: 5 },
+
+  // City Cruiser parts
+  { product_id: 2, part_type_id: 1, display_order: 1 },
+  { product_id: 2, part_type_id: 2, display_order: 2 },
+  { product_id: 2, part_type_id: 3, display_order: 3 },
+  { product_id: 2, part_type_id: 4, display_order: 4 },
+  { product_id: 2, part_type_id: 5, display_order: 5 },
+];
+
+// Sample Part Options
+const partOptions = [
+  // Frame Types
+  {
+    id: 1,
+    part_type_id: 1,
+    name: 'Full-suspension',
+    description: 'Front and rear shock absorbers for rough terrain',
+    base_price: 130.0,
+    active: 1,
+  },
+  {
+    id: 2,
+    part_type_id: 1,
+    name: 'Diamond',
+    description: 'Traditional frame design with improved stability',
+    base_price: 100.0,
+    active: 1,
+  },
+  {
+    id: 3,
+    part_type_id: 1,
+    name: 'Step-through',
+    description: 'Low top tube for easy mounting and dismounting',
+    base_price: 110.0,
+    active: 1,
+  },
+
+  // Frame Finishes
+  {
+    id: 4,
+    part_type_id: 2,
+    name: 'Matte',
+    description: 'Non-reflective finish',
+    base_price: 0.0, // Base price is 0 because it varies with frame type
+    active: 1,
+  },
+  {
+    id: 5,
+    part_type_id: 2,
+    name: 'Shiny',
+    description: 'Glossy reflective finish',
+    base_price: 30.0,
+    active: 1,
+  },
+
+  // Wheels
+  {
+    id: 6,
+    part_type_id: 3,
+    name: 'Road Wheels',
+    description: 'Thin, fast wheels for paved surfaces',
+    base_price: 80.0,
+    active: 1,
+  },
+  {
+    id: 7,
+    part_type_id: 3,
+    name: 'Mountain Wheels',
+    description: 'Sturdy wheels with good traction for trails',
+    base_price: 95.0,
+    active: 1,
+  },
+  {
+    id: 8,
+    part_type_id: 3,
+    name: 'Fat Bike Wheels',
+    description: 'Extra wide wheels for sand and snow',
+    base_price: 120.0,
+    active: 1,
+  },
+
+  // Rim Colors
+  {
+    id: 9,
+    part_type_id: 4,
+    name: 'Red',
+    description: 'Bright red color',
+    base_price: 20.0,
+    active: 1,
+  },
+  {
+    id: 10,
+    part_type_id: 4,
+    name: 'Black',
+    description: 'Classic black color',
+    base_price: 15.0,
+    active: 1,
+  },
+  {
+    id: 11,
+    part_type_id: 4,
+    name: 'Blue',
+    description: 'Deep blue color',
+    base_price: 20.0,
+    active: 1,
+  },
+
+  // Chains
+  {
+    id: 12,
+    part_type_id: 5,
+    name: 'Single-speed Chain',
+    description: 'Simple chain for bikes without gears',
+    base_price: 43.0,
+    active: 1,
+  },
+  {
+    id: 13,
+    part_type_id: 5,
+    name: '8-speed Chain',
+    description: 'Chain compatible with 8-speed gear systems',
+    base_price: 55.0,
+    active: 1,
+  },
+];
+
 // Example data export
 module.exports = {
   categories,
   products,
+  partTypes,
+  productPartTypes,
+  partOptions,
 };
