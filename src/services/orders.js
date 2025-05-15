@@ -182,6 +182,17 @@ class OrderService {
       };
     }
 
+    // Verify inventory availability
+    const inventoryCheck = await this.verifyInventoryForCart(cartId);
+
+    if (!inventoryCheck.available) {
+      return {
+        success: false,
+        message: 'Some items are no longer available',
+        unavailableItems: inventoryCheck.unavailableItems,
+      };
+    }
+
     // Process payment (simplified)
     const paymentResult = await this.processPayment(
       cart.total_price,
@@ -212,6 +223,97 @@ class OrderService {
       orderId: cartId,
       paymentReference: paymentResult.reference,
     };
+  }
+
+  /**
+   * Verifies inventory availability for all items in a cart
+   */
+  async verifyInventoryForCart(cartId) {
+    const unavailableItems = [];
+
+    // Get all items and their configurations
+    const items = await this.database.query(
+      `SELECT oi.id, oi.product_id, oi.quantity
+       FROM OrderItems oi
+       WHERE oi.order_id = ?`,
+      [cartId]
+    );
+
+    for (const item of items) {
+      const configurations = await this.database.query(
+        `SELECT oic.part_option_id
+         FROM OrderItemConfiguration oic
+         WHERE oic.order_item_id = ?`,
+        [item.id]
+      );
+
+      for (const config of configurations) {
+        const inventory = await this.database.query(
+          `SELECT in_stock, quantity
+           FROM Inventory
+           WHERE part_option_id = ?`,
+          [config.part_option_id]
+        );
+
+        if (
+          !inventory ||
+          !inventory.in_stock ||
+          inventory.quantity < item.quantity
+        ) {
+          unavailableItems.push({
+            orderItemId: item.id,
+            partOptionId: config.part_option_id,
+            requestedQuantity: item.quantity,
+            availableQuantity: inventory ? inventory.quantity : 0,
+          });
+        }
+      }
+    }
+
+    return {
+      available: unavailableItems.length === 0,
+      unavailableItems,
+    };
+  }
+
+  /**
+   * Updates inventory after an order is placed
+   */
+  async updateInventoryFromOrder(orderId) {
+    // Get all items and their configurations
+    const items = await this.database.query(
+      `SELECT oi.id, oi.quantity
+       FROM OrderItems oi
+       WHERE oi.order_id = ?`,
+      [orderId]
+    );
+
+    for (const item of items) {
+      const configurations = await this.database.query(
+        `SELECT oic.part_option_id
+         FROM OrderItemConfiguration oic
+         WHERE oic.order_item_id = ?`,
+        [item.id]
+      );
+
+      for (const config of configurations) {
+        // Reduce inventory
+        await this.database.query(
+          `UPDATE Inventory
+           SET quantity = quantity - ?
+           WHERE part_option_id = ?`,
+          [item.quantity, config.part_option_id]
+        );
+
+        // If quantity becomes 0, update in_stock status
+        await this.database.query(
+          `UPDATE Inventory
+           SET in_stock = (quantity > 0)
+           WHERE part_option_id = ? AND quantity <= 0`,
+          [config.part_option_id]
+        );
+      }
+    }
   }
 
   /**

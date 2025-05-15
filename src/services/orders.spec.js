@@ -41,7 +41,8 @@ describe('OrderService.checkout', () => {
   it('returns failure if payment fails', async () => {
     database.query
       .mockResolvedValueOnce({ id: 1, customer_id: 2, total_price: 100 }) // cart found
-      .mockResolvedValueOnce([{ id: 10 }]); // items found
+      .mockResolvedValueOnce([{ id: 10 }]) // items found
+      .mockResolvedValueOnce([]); // inventory check
 
     jest.spyOn(orderService, 'processPayment').mockResolvedValueOnce({
       success: false,
@@ -62,6 +63,7 @@ describe('OrderService.checkout', () => {
     database.query
       .mockResolvedValueOnce({ id: 1, customer_id: 2, total_price: 100 }) // cart found
       .mockResolvedValueOnce([{ id: 10 }]) // items found
+      .mockResolvedValueOnce([]) // inventory check
       .mockResolvedValueOnce({}); // update query
 
     jest.spyOn(orderService, 'processPayment').mockResolvedValueOnce({
@@ -236,5 +238,108 @@ describe('OrderService.addToCart', () => {
     );
     expect(result.success).toBe(true);
     expect(result.cartItemId).toBe(order.id);
+  });
+});
+
+describe('OrderService.verifyInventoryForCart', () => {
+  let orderService;
+
+  beforeEach(() => {
+    database.reset();
+    orderService = new OrderService(database);
+  });
+
+  it('returns available=true if all inventory is sufficient', async () => {
+    // Mock items in cart
+    database.query
+      .mockResolvedValueOnce([{ id: 1, product_id: 2, quantity: 2 }]) // OrderItems
+      .mockResolvedValueOnce([{ part_option_id: 10 }]) // Configurations for item 1
+      .mockResolvedValueOnce({
+        in_stock: true,
+        quantity: 5,
+      }); // Inventory for part_option_id 10
+
+    const result = await orderService.verifyInventoryForCart(123);
+
+    expect(result.available).toBe(true);
+    expect(result.unavailableItems).toEqual([]);
+  });
+
+  it('returns available=false if inventory is insufficient', async () => {
+    database.query
+      .mockResolvedValueOnce([{ id: 1, product_id: 2, quantity: 3 }]) // OrderItems
+      .mockResolvedValueOnce([{ part_option_id: 10 }]) // Configurations for item 1
+      .mockResolvedValueOnce({
+        in_stock: true,
+        quantity: 2,
+      }); // Inventory for part_option_id 10
+
+    const result = await orderService.verifyInventoryForCart(123);
+
+    expect(result.available).toBe(false);
+    expect(result.unavailableItems.length).toBe(1);
+    expect(result.unavailableItems[0]).toMatchObject({
+      orderItemId: 1,
+      partOptionId: 10,
+      requestedQuantity: 3,
+      availableQuantity: 2,
+    });
+  });
+
+  it('returns available=false if inventory is not in stock', async () => {
+    database.query
+      .mockResolvedValueOnce([{ id: 1, product_id: 2, quantity: 1 }]) // OrderItems
+      .mockResolvedValueOnce([{ part_option_id: 11 }]) // Configurations for item 1
+      .mockResolvedValueOnce({
+        in_stock: false,
+        quantity: 0,
+      }); // Inventory for part_option_id 11
+
+    const result = await orderService.verifyInventoryForCart(123);
+
+    expect(result.available).toBe(false);
+    expect(result.unavailableItems[0].partOptionId).toBe(11);
+  });
+
+  it('returns available=false if inventory record is missing', async () => {
+    database.query
+      .mockResolvedValueOnce([{ id: 1, product_id: 2, quantity: 1 }]) // OrderItems
+      .mockResolvedValueOnce([{ part_option_id: 12 }]) // Configurations for item 1
+      .mockResolvedValueOnce(null); // Inventory missing
+
+    const result = await orderService.verifyInventoryForCart(123);
+
+    expect(result.available).toBe(false);
+    expect(result.unavailableItems[0].partOptionId).toBe(12);
+    expect(result.unavailableItems[0].availableQuantity).toBe(0);
+  });
+});
+
+describe('OrderService.updateInventoryFromOrder', () => {
+  let orderService;
+
+  beforeEach(() => {
+    database.reset();
+    orderService = new OrderService(database);
+  });
+
+  it('updates inventory quantities and in_stock status for each configuration', async () => {
+    // Mock OrderItems
+    database.query
+      .mockResolvedValueOnce([{ id: 1, quantity: 2 }]) // OrderItems for order
+      .mockResolvedValueOnce([{ part_option_id: 10 }]) // Configurations for item 1
+      .mockResolvedValueOnce({}) // UPDATE Inventory quantity
+      .mockResolvedValueOnce({}); // UPDATE Inventory in_stock
+
+    await orderService.updateInventoryFromOrder(123);
+
+    expect(database.query).toHaveBeenCalledWith(
+      expect.stringContaining('UPDATE Inventory'),
+      [2, 10]
+    );
+    expect(database.query).toHaveBeenCalledWith(
+      expect.stringContaining('UPDATE Inventory'),
+      [10]
+    );
   });
 });

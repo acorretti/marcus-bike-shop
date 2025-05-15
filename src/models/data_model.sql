@@ -49,6 +49,16 @@ CREATE TABLE PartOptions (
   FOREIGN KEY (part_type_id) REFERENCES PartTypes(id)
 );
 
+-- Inventory tracks stock levels for specific part options
+CREATE TABLE Inventory (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  part_option_id INTEGER NOT NULL,
+  quantity INTEGER NOT NULL DEFAULT 0,
+  in_stock BOOLEAN,
+  expected_restock_date DATE,
+  FOREIGN KEY (part_option_id) REFERENCES PartOptions(id)
+);
+
 -- Customers table for user accounts
 CREATE TABLE Customers (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
