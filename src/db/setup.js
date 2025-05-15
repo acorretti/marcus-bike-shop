@@ -27,8 +27,26 @@ function initializeSchema(db) {
   return db;
 }
 
+function getDatabaseFilePath() {
+  let dbPath;
+  if (process.env.DB_PATH) {
+    // Resolve the DB_PATH env var from the project root
+    dbPath = path.resolve(__dirname, '..', '..', process.env.DB_PATH);
+  } else {
+    // Default to the data directory in the project root
+    dbPath = path.resolve(__dirname, '..', '..', 'data');
+  }
+  return path.join(dbPath, process.env.DB_FILE || 'database.db');
+}
+
 // Utility function to create a database
 function createDatabase(dbPath) {
+  // Ensure containing directory exists
+  const dataDir = path.dirname(dbPath);
+  if (!fs.existsSync(dataDir)) {
+    fs.mkdirSync(dataDir, { recursive: true });
+  }
+
   const db = connectDatabase(dbPath);
   initializeSchema(db);
   return db;
@@ -38,4 +56,5 @@ module.exports = {
   connectDatabase,
   initializeSchema,
   createDatabase,
+  getDatabaseFilePath,
 };

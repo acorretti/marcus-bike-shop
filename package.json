@@ -13,7 +13,8 @@
   "author": "Alfonso Corretti <acorretti@gmail.com>",
   "license": "ISC",
   "dependencies": {
-    "better-sqlite3": "11.10.0"
+    "better-sqlite3": "11.10.0",
+    "dotenv": "16.5.0"
   },
   "devDependencies": {
     "eslint": "9.26.0",
