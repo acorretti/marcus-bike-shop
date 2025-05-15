@@ -13,7 +13,7 @@ const dbPath = getDatabaseFilePath();
 
 // Initialize the database if it doesn't exist
 if (!fs.existsSync(dbPath)) {
-  console.debug(`Initializing database at ${dbPath}...`);
+  console.debug(`Initializing database at`, `${dbPath}...`.green);
   createDatabase(dbPath);
-  console.debug('Database initialized successfully.');
+  console.debug('Database initialized successfully.'.underline.green);
 }

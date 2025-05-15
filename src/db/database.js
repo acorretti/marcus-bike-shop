@@ -1,9 +1,9 @@
+require('colors');
+const { connectDatabase } = require('./setup');
+
 /**
  * Database interface implementation using better-sqlite3
  */
-
-const { connectDatabase } = require('./setup');
-
 class SQLiteDatabase {
   constructor(dbPath) {
     // If not provided, use an in-memory database
