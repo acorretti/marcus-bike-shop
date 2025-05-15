@@ -59,6 +59,25 @@ CREATE TABLE Inventory (
   FOREIGN KEY (part_option_id) REFERENCES PartOptions(id)
 );
 
+-- IncompatibilityRules defines which combinations of parts are not allowed
+CREATE TABLE IncompatibilityRules (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name VARCHAR(255),
+  description TEXT,
+  active BOOLEAN DEFAULT TRUE
+);
+
+-- RuleConditions defines the specific conditions for incompatibility rules
+CREATE TABLE RuleConditions (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  rule_id INTEGER NOT NULL,
+  part_option_id INTEGER NOT NULL,
+  incompatible_with_part_option_id INTEGER NOT NULL,
+  FOREIGN KEY (rule_id) REFERENCES IncompatibilityRules(id),
+  FOREIGN KEY (part_option_id) REFERENCES PartOptions(id),
+  FOREIGN KEY (incompatible_with_part_option_id) REFERENCES PartOptions(id)
+);
+
 -- Customers table for user accounts
 CREATE TABLE Customers (
   id INTEGER PRIMARY KEY AUTOINCREMENT,

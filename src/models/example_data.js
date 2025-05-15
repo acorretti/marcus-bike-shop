@@ -240,6 +240,32 @@ const inventory = [
   { part_option_id: 13, quantity: 40, in_stock: 1 },
 ];
 
+// Sample Incompatibility Rules
+const incompatibilityRules = [
+  {
+    id: 1,
+    name: 'Mountain wheels require full-suspension',
+    description: 'Mountain wheels can only be used with full-suspension frames',
+    active: 1,
+  },
+  {
+    id: 2,
+    name: 'Fat wheels with rim colors',
+    description: 'Red rim color unavailable with fat bike wheels',
+    active: 1,
+  },
+];
+
+// Sample Rule Conditions
+const ruleConditions = [
+  // If mountain wheels selected, only full-suspension frame is allowed
+  { rule_id: 1, part_option_id: 7, incompatible_with_part_option_id: 2 },
+  { rule_id: 1, part_option_id: 7, incompatible_with_part_option_id: 3 },
+
+  // If fat bike wheels selected, red rim is unavailable
+  { rule_id: 2, part_option_id: 8, incompatible_with_part_option_id: 9 },
+];
+
 // Example data export
 module.exports = {
   categories,
@@ -248,4 +274,6 @@ module.exports = {
   productPartTypes,
   partOptions,
   inventory,
+  incompatibilityRules,
+  ruleConditions,
 };

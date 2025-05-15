@@ -27,13 +27,47 @@ class ProductConfigurationService {
     );
 
     // 2. Filter out incompatible options based on current selections
+    const compatibleOptions = await this.filterIncompatibleOptions(
+      options,
+      currentSelections
+    );
 
     // 3. Get inventory status for remaining options
-    const optionsWithInventory = await this.addInventoryStatus(options);
+    const optionsWithInventory =
+      await this.addInventoryStatus(compatibleOptions);
 
     // 4. Calculate adjusted prices based on current selections
 
     return optionsWithInventory;
+  }
+
+  /**
+   * Filters out options that are incompatible with current selections
+   */
+  async filterIncompatibleOptions(options, currentSelections) {
+    if (currentSelections.length === 0) {
+      return options;
+    }
+
+    const incompatibleOptionIds = new Set();
+
+    // Get all incompatible combinations involving current selections
+    for (const selection of currentSelections) {
+      const incompatibilities = await this.database.query(
+        `SELECT incompatible_with_part_option_id 
+         FROM RuleConditions rc
+         JOIN IncompatibilityRules ir ON rc.rule_id = ir.id
+         WHERE rc.part_option_id = ? AND ir.active = TRUE`,
+        [selection.partOptionId]
+      );
+
+      incompatibilities.forEach((item) => {
+        incompatibleOptionIds.add(item.incompatible_with_part_option_id);
+      });
+    }
+
+    // Filter out incompatible options
+    return options.filter((option) => !incompatibleOptionIds.has(option.id));
   }
 
   /**
