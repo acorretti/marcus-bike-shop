@@ -12,6 +12,9 @@
   "keywords": [],
   "author": "Alfonso Corretti <acorretti@gmail.com>",
   "license": "ISC",
+  "dependencies": {
+    "better-sqlite3": "11.10.0"
+  },
   "devDependencies": {
     "eslint": "9.26.0",
     "eslint-config-prettier": "10.1.5",
