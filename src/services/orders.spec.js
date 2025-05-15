@@ -91,3 +91,55 @@ describe('OrderService.checkout', () => {
     );
   });
 });
+
+describe('OrderService.addToCart', () => {
+  let orderService;
+
+  beforeEach(() => {
+    database.reset();
+    orderService = new OrderService(database);
+  });
+
+  it('adds item to existing cart and updates total', async () => {
+    // Mock getOrCreateCart returns existing cart
+    orderService.getOrCreateCart = jest.fn().mockResolvedValue({ id: 5 });
+    // Mock database.query for adding item
+    database.query
+      .mockResolvedValueOnce({ id: 42 }) // insert OrderItems
+      .mockResolvedValueOnce({}); // updateCartTotal
+
+    const result = await orderService.addToCart(1, 2, 3, 123);
+
+    expect(orderService.getOrCreateCart).toHaveBeenCalledWith(1);
+    expect(database.query).toHaveBeenCalledWith(
+      expect.stringContaining('INSERT INTO OrderItems'),
+      [5, 2, 3, 123]
+    );
+    expect(database.query).toHaveBeenCalledWith(
+      expect.stringContaining('UPDATE Orders'),
+      [5, 5]
+    );
+    expect(result).toEqual({
+      success: true,
+      message: 'Item added to cart',
+      cartItemId: 42,
+    });
+  });
+
+  it('creates a new cart if none exists', async () => {
+    // getOrCreateCart returns new cart
+    orderService.getOrCreateCart = jest.fn().mockResolvedValue({ id: 99 });
+    database.query
+      .mockResolvedValueOnce({ id: 77 }) // insert OrderItems
+      .mockResolvedValueOnce({}); // updateCartTotal
+
+    const result = await orderService.addToCart(3, 4, 2, 200);
+
+    expect(orderService.getOrCreateCart).toHaveBeenCalledWith(3);
+    expect(database.query).toHaveBeenCalledWith(
+      expect.stringContaining('INSERT INTO OrderItems'),
+      [99, 4, 2, 200]
+    );
+    expect(result.cartItemId).toBe(77);
+  });
+});

@@ -10,6 +10,38 @@ class OrderService {
   }
 
   /**
+   * Adds a configured product to the cart
+   *
+   * @param {number} customerId - The customer ID
+   * @param {number} productId - The product being added
+   * @param {number} quantity - Number of items to add
+   * @param {number} price - Total price of the product
+   * @returns {Object} Result of the operation
+   */
+  async addToCart(customerId, productId, quantity = 1, price) {
+    // Get or create cart for this customer
+    let cart = await this.getOrCreateCart(customerId);
+
+    // Add item to cart
+    const cartItem = await this.database.query(
+      `INSERT INTO OrderItems 
+         (order_id, product_id, quantity, price) 
+       VALUES (?, ?, ?, ?)
+       RETURNING id`,
+      [cart.id, productId, quantity, price]
+    );
+
+    // Update cart total
+    await this.updateCartTotal(cart.id);
+
+    return {
+      success: true,
+      message: 'Item added to cart',
+      cartItemId: cartItem.id,
+    };
+  }
+
+  /**
    * Gets the current cart for a customer or creates a new one
    */
   async getOrCreateCart(customerId) {
