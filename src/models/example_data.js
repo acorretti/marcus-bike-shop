@@ -209,6 +209,37 @@ const partOptions = [
   },
 ];
 
+// Sample Inventory
+const inventory = [
+  // Full inventory for Frame Types
+  { part_option_id: 1, quantity: 15, in_stock: 1 },
+  { part_option_id: 2, quantity: 20, in_stock: 1 },
+  { part_option_id: 3, quantity: 18, in_stock: 1 },
+
+  // Full inventory for Frame Finishes
+  { part_option_id: 4, quantity: 50, in_stock: 1 },
+  { part_option_id: 5, quantity: 40, in_stock: 1 },
+
+  // Some inventory issues with wheels
+  { part_option_id: 6, quantity: 25, in_stock: 1 },
+  { part_option_id: 7, quantity: 10, in_stock: 1 },
+  {
+    part_option_id: 8,
+    quantity: 0,
+    in_stock: 0,
+    expected_restock_date: '2025-06-15',
+  },
+
+  // Rim Colors
+  { part_option_id: 9, quantity: 30, in_stock: 1 },
+  { part_option_id: 10, quantity: 35, in_stock: 1 },
+  { part_option_id: 11, quantity: 15, in_stock: 1 },
+
+  // Chains
+  { part_option_id: 12, quantity: 45, in_stock: 1 },
+  { part_option_id: 13, quantity: 40, in_stock: 1 },
+];
+
 // Example data export
 module.exports = {
   categories,
@@ -216,4 +247,5 @@ module.exports = {
   partTypes,
   productPartTypes,
   partOptions,
+  inventory,
 };
