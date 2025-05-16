@@ -46,7 +46,7 @@ class OrderService {
     let cart = await this.getOrCreateCart(customerId);
 
     // 4. Add item to cart
-    const cartItem = await this.database.query(
+    const [cartItem] = await this.database.query(
       `INSERT INTO OrderItems 
          (order_id, product_id, quantity, price) 
        VALUES (?, ?, ?, ?)

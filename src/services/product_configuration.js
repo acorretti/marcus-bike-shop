@@ -176,7 +176,7 @@ class ProductConfigurationService {
    */
   async calculateTotalPrice(productId, selectedOptions) {
     // Get product base price
-    const product = await this.database.query(
+    const [product] = await this.database.query(
       'SELECT base_price FROM Products WHERE id = ?',
       [productId]
     );
@@ -246,12 +246,13 @@ class ProductConfigurationService {
     const selectedPartOptions = new Map();
 
     for (const option of selectedOptions) {
-      const partOption = await this.database.query(
+      const partOptionResults = await this.database.query(
         'SELECT part_type_id FROM PartOptions WHERE id = ?',
         [option.partOptionId]
       );
 
-      if (partOption) {
+      if (partOptionResults.length) {
+        const partOption = partOptionResults.shift();
         selectedPartTypes.add(partOption.part_type_id);
         selectedPartOptions.set(partOption.part_type_id, option.partOptionId);
       }
@@ -287,7 +288,7 @@ class ProductConfigurationService {
           [optionA, optionB, optionB, optionA]
         );
 
-        if (conflict) {
+        if (conflict.length) {
           incompatibilities.push({ optionA, optionB });
         }
       }
@@ -310,7 +311,11 @@ class ProductConfigurationService {
         [option.partOptionId]
       );
 
-      if (!inventory || !inventory.in_stock || inventory.quantity <= 0) {
+      if (
+        !inventory.length ||
+        !inventory[0].in_stock ||
+        inventory[0].quantity <= 0
+      ) {
         unavailableOptions.push(option.partOptionId);
       }
     }
