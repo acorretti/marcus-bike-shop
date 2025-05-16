@@ -32,6 +32,8 @@ src/
 │   └── integration.test.js                  # Integration tests
 │   └── mock_database.js                     # Product database mock
 ├── example_data.js                        # Product database sample data
+├── REQUIREMENTS.md                        # Provided requirements (verbatim)
+└── WORKFLOWS.md                           # User workflows breakdown
 ```
 
 ## Setup Instructions
