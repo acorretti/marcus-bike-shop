@@ -97,6 +97,48 @@ async function seedDatabase() {
       );
     }
 
+    // Insert incompatibility rules
+    for (const rule of exampleData.incompatibilityRules) {
+      await db.query(
+        'INSERT INTO IncompatibilityRules (id, name, description, active) VALUES (?, ?, ?, ?)',
+        [rule.id, rule.name, rule.description, rule.active]
+      );
+    }
+
+    // Insert rule conditions
+    for (const cond of exampleData.ruleConditions) {
+      await db.query(
+        'INSERT INTO RuleConditions (rule_id, part_option_id, incompatible_with_part_option_id) VALUES (?, ?, ?)',
+        [
+          cond.rule_id,
+          cond.part_option_id,
+          cond.incompatible_with_part_option_id,
+        ]
+      );
+    }
+
+    // Insert pricing rules
+    for (const rule of exampleData.pricingRules) {
+      await db.query(
+        'INSERT INTO PricingRules (id, name, description, price_adjustment, is_percentage, active) VALUES (?, ?, ?, ?, ?, ?)',
+        [
+          rule.id,
+          rule.name,
+          rule.description,
+          rule.price_adjustment,
+          rule.is_percentage,
+          rule.active,
+        ]
+      );
+    }
+
+    // Insert pricing rule conditions
+    for (const cond of exampleData.pricingRuleConditions) {
+      await db.query(
+        'INSERT INTO PricingRuleConditions (pricing_rule_id, part_option_id) VALUES (?, ?)',
+        [cond.pricing_rule_id, cond.part_option_id]
+      );
+    }
 
     console.debug('Database seeded successfully!'.green);
   } catch (error) {

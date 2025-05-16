@@ -266,6 +266,61 @@ const ruleConditions = [
   { rule_id: 2, part_option_id: 8, incompatible_with_part_option_id: 9 },
 ];
 
+// Sample Pricing Rules
+const pricingRules = [
+  {
+    id: 1,
+    name: 'Matte finish on full-suspension',
+    description: 'Matte finish costs more on full-suspension frames',
+    price_adjustment: 50.0,
+    is_percentage: 0,
+    active: 1,
+  },
+  {
+    id: 2,
+    name: 'Matte finish on diamond',
+    description: 'Matte finish costs more on diamond frames',
+    price_adjustment: 35.0,
+    is_percentage: 0,
+    active: 1,
+  },
+  {
+    id: 3,
+    name: 'Matte finish on step-through',
+    description: 'Matte finish costs more on step-through frames',
+    price_adjustment: 40.0,
+    is_percentage: 0,
+    active: 1,
+  },
+  {
+    id: 4,
+    name: 'Premium combination discount',
+    description: 'Discount for premium wheel and chain combination',
+    price_adjustment: -10.0,
+    is_percentage: 1,
+    active: 1,
+  },
+];
+
+// Sample Pricing Rule Conditions
+const pricingRuleConditions = [
+  // Matte finish on full-suspension
+  { pricing_rule_id: 1, part_option_id: 1 }, // Full-suspension frame
+  { pricing_rule_id: 1, part_option_id: 4 }, // Matte finish
+
+  // Matte finish on diamond
+  { pricing_rule_id: 2, part_option_id: 2 }, // Diamond frame
+  { pricing_rule_id: 2, part_option_id: 4 }, // Matte finish
+
+  // Matte finish on step-through
+  { pricing_rule_id: 3, part_option_id: 3 }, // Step-through frame
+  { pricing_rule_id: 3, part_option_id: 4 }, // Matte finish
+
+  // Premium combination discount
+  { pricing_rule_id: 4, part_option_id: 7 }, // Mountain wheels
+  { pricing_rule_id: 4, part_option_id: 13 }, // 8-speed chain
+];
+
 // Example data export
 module.exports = {
   categories,
@@ -276,4 +331,6 @@ module.exports = {
   inventory,
   incompatibilityRules,
   ruleConditions,
+  pricingRules,
+  pricingRuleConditions,
 };
