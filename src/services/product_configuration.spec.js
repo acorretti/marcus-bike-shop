@@ -73,11 +73,15 @@ describe('ProductConfigurationService', () => {
     it('filters out incompatible options based on current selections', async () => {
       // Mock: options, incompatibilities, inventory
       const currentSelections = [{ partOptionId: 10 }];
-      const incompatibilities = [{ incompatible_with_part_option_id: 11 }];
+      const incompatibilities = [
+        { part_option_id: 11, incompatible_with_part_option_id: 10 },
+      ];
       database.query
         .mockResolvedValueOnce(options) // For PartOptions
         .mockResolvedValueOnce(incompatibilities) // For incompatibility rules
+        .mockResolvedValueOnce(incompatibilities) // Second incompatibility check
         .mockResolvedValueOnce([inventory[0]]) // Only compatible inventory
+        .mockResolvedValueOnce([]) // pricingRules
         .mockResolvedValueOnce([]); // pricingRules
 
       const result = await configService.getAvailableOptions(
@@ -106,8 +110,12 @@ describe('ProductConfigurationService', () => {
 
     it('filters out options that are incompatible', async () => {
       const currentSelections = [{ partOptionId: 10 }];
-      const incompatibilities = [{ incompatible_with_part_option_id: 11 }];
-      database.query.mockResolvedValueOnce(incompatibilities);
+      const incompatibilities = [
+        { part_option_id: 11, incompatible_with_part_option_id: 10 },
+      ];
+      database.query
+        .mockResolvedValueOnce(incompatibilities)
+        .mockResolvedValueOnce(incompatibilities);
 
       const result = await configService.filterIncompatibleOptions(
         options,
@@ -118,7 +126,9 @@ describe('ProductConfigurationService', () => {
 
     it('returns all options if no incompatibilities found', async () => {
       const currentSelections = [{ partOptionId: 10 }];
-      database.query.mockResolvedValueOnce([]); // No incompatibilities
+      database.query
+        .mockResolvedValueOnce([]) // No incompatibilities
+        .mockResolvedValueOnce([]); // No incompatibilities
 
       const result = await configService.filterIncompatibleOptions(
         options,
@@ -135,7 +145,10 @@ describe('ProductConfigurationService', () => {
       // First selection incompatible with options[0], second with none
       database.query
         .mockResolvedValueOnce([
-          { incompatible_with_part_option_id: options[0].id },
+          {
+            part_option_id: currentSelections[0].partOptionId,
+            incompatible_with_part_option_id: options[0].id,
+          },
         ])
         .mockResolvedValueOnce([]);
 
@@ -216,8 +229,8 @@ describe('ProductConfigurationService', () => {
       // Mock required part types (all present)
       database.query
         .mockResolvedValueOnce([{ id: 1, name: 'Frame' }]) // requiredPartTypes
-        .mockResolvedValueOnce({ part_type_id: 1 }) // for option 1
-        .mockResolvedValueOnce({ part_type_id: 1 }) // for option 2
+        .mockResolvedValueOnce([{ part_type_id: 1 }]) // for option 1
+        .mockResolvedValueOnce([{ part_type_id: 1 }]) // for option 2
         .mockResolvedValueOnce([{}]); // conflict found
 
       const selectedOptions = [{ partOptionId: 10 }, { partOptionId: 11 }];
@@ -235,9 +248,9 @@ describe('ProductConfigurationService', () => {
       // Mock required part types (all present)
       database.query
         .mockResolvedValueOnce([{ id: 1, name: 'Frame' }]) // requiredPartTypes
-        .mockResolvedValueOnce({ part_type_id: 1 }) // for option
+        .mockResolvedValueOnce([{ part_type_id: 1 }]) // for option
         .mockResolvedValueOnce([]) // no incompatibilities
-        .mockResolvedValueOnce({ in_stock: false, quantity: 0 }); // inventory
+        .mockResolvedValueOnce([{ in_stock: false, quantity: 0 }]); // inventory
 
       const selectedOptions = [{ partOptionId: 10 }];
       const result = await configService.validateConfiguration(
@@ -253,8 +266,8 @@ describe('ProductConfigurationService', () => {
     it('returns valid if all checks pass', async () => {
       database.query
         .mockResolvedValueOnce([{ id: 1, name: 'Frame' }]) // requiredPartTypes
-        .mockResolvedValueOnce({ part_type_id: 1 }) // for option
-        .mockResolvedValueOnce({ in_stock: true, quantity: 5 }); // inventory
+        .mockResolvedValueOnce([{ part_type_id: 1 }]) // for option
+        .mockResolvedValueOnce([{ in_stock: true, quantity: 5 }]); // inventory
 
       const selectedOptions = [{ partOptionId: 10 }];
       const result = await configService.validateConfiguration(

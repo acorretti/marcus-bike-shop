@@ -114,16 +114,16 @@ describe('OrderService.addToCart', () => {
     // Mock validateConfiguration DB calls
     database.query
       .mockResolvedValueOnce([{ id: 7, name: 'Part' }]) // requiredPartTypes
-      .mockResolvedValueOnce({ part_type_id: 7 }) // selectedOptions
-      .mockResolvedValueOnce({ in_stock: true, quantity: 5 }) // checkInventory
-      .mockResolvedValueOnce({ base_price: totalPrice }) // calculateTotalPrice
+      .mockResolvedValueOnce([{ part_type_id: 7 }]) // selectedOptions
+      .mockResolvedValueOnce([{ in_stock: true, quantity: 5 }]) // checkInventory
+      .mockResolvedValueOnce([{ base_price: totalPrice }]) // calculateTotalPrice
       .mockResolvedValueOnce([{ id: productId, base_price: 0 }]); // getProductPrice
     // Mock getOrCreateCart to return existing cart
     orderService.getOrCreateCart = jest.fn().mockResolvedValue(cart);
     database.query
-      .mockResolvedValueOnce(order) // insert OrderItems
-      .mockResolvedValueOnce({}) // insert OrderItemConfiguration
-      .mockResolvedValueOnce({}); // updateCartTotal
+      .mockResolvedValueOnce([order]) // insert OrderItems
+      .mockResolvedValueOnce([{}]) // insert OrderItemConfiguration
+      .mockResolvedValueOnce([{}]); // updateCartTotal
 
     const result = await orderService.addToCart(
       cart.customer,
@@ -156,16 +156,16 @@ describe('OrderService.addToCart', () => {
     // Mock validateConfiguration DB calls
     database.query
       .mockResolvedValueOnce([{ id: 7, name: 'Part' }]) // requiredPartTypes
-      .mockResolvedValueOnce({ part_type_id: 7 }) // selectedOptions
-      .mockResolvedValueOnce({ in_stock: true, quantity: 5 }) // checkInventory
-      .mockResolvedValueOnce({ base_price: totalPrice }) // calculateTotalPrice
+      .mockResolvedValueOnce([{ part_type_id: 7 }]) // selectedOptions
+      .mockResolvedValueOnce([{ in_stock: true, quantity: 5 }]) // checkInventory
+      .mockResolvedValueOnce([{ base_price: totalPrice }]) // calculateTotalPrice
       .mockResolvedValueOnce([{ id: productId, base_price: 0 }]); // getProductPrice
 
     const newCart = { id: 99, customer: 98 };
     orderService.getOrCreateCart = jest.fn().mockResolvedValue(newCart);
     database.query
-      .mockResolvedValueOnce({ id: 77 }) // insert OrderItems
-      .mockResolvedValueOnce({}); // updateCartTotal
+      .mockResolvedValueOnce([{ id: 77 }]) // insert OrderItems
+      .mockResolvedValueOnce([{}]); // updateCartTotal
 
     const result = await orderService.addToCart(
       newCart.customer,
@@ -186,13 +186,13 @@ describe('OrderService.addToCart', () => {
     // Mock validateConfiguration DB calls
     database.query
       .mockResolvedValueOnce([]) // requiredPartTypes
-      .mockResolvedValueOnce({ base_price: totalPrice }) // calculateTotalPrice
+      .mockResolvedValueOnce([{ base_price: totalPrice }]) // calculateTotalPrice
       .mockResolvedValueOnce([]); // optionPrices
 
     orderService.getOrCreateCart = jest.fn().mockResolvedValue(cart);
     database.query
-      .mockResolvedValueOnce(order) // insert OrderItems
-      .mockResolvedValueOnce({}); // updateCartTotal
+      .mockResolvedValueOnce([order]) // insert OrderItems
+      .mockResolvedValueOnce([{}]); // updateCartTotal
 
     const result = await orderService.addToCart(
       cart.customer,
@@ -217,7 +217,7 @@ describe('OrderService.addToCart', () => {
   it('throws if database.query for OrderItems fails', async () => {
     database.query
       .mockResolvedValueOnce([{ valid: true, message: 'ok' }]) // validateConfiguration
-      .mockResolvedValueOnce({ totalPrice }); // calculateTotalPrice
+      .mockResolvedValueOnce([{ totalPrice }]); // calculateTotalPrice
     orderService.getOrCreateCart = jest.fn().mockResolvedValue(cart);
     database.query.mockRejectedValueOnce(new Error('DB error'));
 
@@ -237,21 +237,21 @@ describe('OrderService.addToCart', () => {
         { id: 7, name: 'Part 1' },
         { id: 8, name: 'Part 2' },
       ]) // requiredPartTypes
-      .mockResolvedValueOnce({ part_type_id: 7 }) // selectedOptions
-      .mockResolvedValueOnce({ part_type_id: 8 }) // selectedOptions
+      .mockResolvedValueOnce([{ part_type_id: 7 }]) // selectedOptions
+      .mockResolvedValueOnce([{ part_type_id: 8 }]) // selectedOptions
       .mockResolvedValueOnce(0) // checkConflict
-      .mockResolvedValueOnce({ in_stock: true, quantity: 5 }) // checkInventory
-      .mockResolvedValueOnce({ in_stock: true, quantity: 5 }) // checkInventory
-      .mockResolvedValueOnce({ base_price: totalPrice }) // calculateTotalPrice
+      .mockResolvedValueOnce([{ in_stock: true, quantity: 5 }]) // checkInventory
+      .mockResolvedValueOnce([{ in_stock: true, quantity: 5 }]) // checkInventory
+      .mockResolvedValueOnce([{ base_price: totalPrice }]) // calculateTotalPrice
       .mockResolvedValueOnce([{ id: productId, base_price: 0 }]) // getProductPrice
       .mockResolvedValueOnce([]); // priceAdjustments
 
     orderService.getOrCreateCart = jest.fn().mockResolvedValue(cart);
     database.query
-      .mockResolvedValueOnce(order) // insert OrderItems
-      .mockResolvedValueOnce({ id: 77 }) // insert OrderItemConfiguration for first option
-      .mockResolvedValueOnce({ id: 78 }) // insert OrderItemConfiguration for second option
-      .mockResolvedValueOnce({}); // updateCartTotal
+      .mockResolvedValueOnce([order]) // insert OrderItems
+      .mockResolvedValueOnce([{ id: 77 }]) // insert OrderItemConfiguration for first option
+      .mockResolvedValueOnce([{ id: 78 }]) // insert OrderItemConfiguration for second option
+      .mockResolvedValueOnce([{}]); // updateCartTotal
 
     const options = [{ partOptionId: 7 }, { partOptionId: 8 }];
 
