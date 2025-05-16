@@ -50,42 +50,28 @@ class ProductConfigurationService {
    * Filters out options that are incompatible with current selections
    */
   async filterIncompatibleOptions(options, currentSelections) {
-    if (currentSelections.length === 0) {
+    if (currentSelections.length === 0 || options.length === 0) {
       return options;
     }
 
-    const incompatibleOptions = [];
+    // Gather all option IDs and current selection IDs
+    const conflicts = await this.database.query(
+      `SELECT rc.part_option_id, rc.incompatible_with_part_option_id
+       FROM RuleConditions rc
+       JOIN IncompatibilityRules ir ON rc.rule_id = ir.id
+       WHERE rc.part_option_id IN (?)
+         AND rc.incompatible_with_part_option_id IN (?)
+         AND ir.active = TRUE`,
+      [options.map((o) => o.id), currentSelections.map((s) => s.partOptionId)]
+    );
 
-    // Get all incompatible combinations involving current options
-    for (const option of options) {
-      incompatibleOptions.push(
-        ...(await this.database.query(
-          `SELECT incompatible_with_part_option_id, part_option_id
-         FROM RuleConditions rc
-         JOIN IncompatibilityRules ir ON rc.rule_id = ir.id
-         WHERE rc.part_option_id = ? AND ir.active = TRUE`,
-          [option.id]
-        ))
-      );
-    }
+    // Build a Set of option IDs that are incompatible with current selections
+    const incompatibleOptionIds = new Set(
+      conflicts.map((c) => c.part_option_id)
+    );
 
     // Filter out incompatible options
-    return options.filter(
-      // get all options for which
-      (option) =>
-        // none of the current selections
-        !currentSelections.some((selection) =>
-          // have an incompatibility between
-          incompatibleOptions.some(
-            (conflict) =>
-              // the currently-inspected option
-              option.id === conflict.part_option_id &&
-              // and the current selection
-              conflict.incompatible_with_part_option_id ===
-                selection.partOptionId
-          )
-        )
-    );
+    return options.filter((option) => !incompatibleOptionIds.has(option.id));
   }
 
   /**

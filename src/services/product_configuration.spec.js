@@ -79,7 +79,6 @@ describe('ProductConfigurationService', () => {
       database.query
         .mockResolvedValueOnce(options) // For PartOptions
         .mockResolvedValueOnce(incompatibilities) // For incompatibility rules
-        .mockResolvedValueOnce(incompatibilities) // Second incompatibility check
         .mockResolvedValueOnce([inventory[0]]) // Only compatible inventory
         .mockResolvedValueOnce([]) // pricingRules
         .mockResolvedValueOnce([]); // pricingRules
@@ -113,9 +112,7 @@ describe('ProductConfigurationService', () => {
       const incompatibilities = [
         { part_option_id: 11, incompatible_with_part_option_id: 10 },
       ];
-      database.query
-        .mockResolvedValueOnce(incompatibilities)
-        .mockResolvedValueOnce(incompatibilities);
+      database.query.mockResolvedValueOnce(incompatibilities);
 
       const result = await configService.filterIncompatibleOptions(
         options,
@@ -126,9 +123,7 @@ describe('ProductConfigurationService', () => {
 
     it('returns all options if no incompatibilities found', async () => {
       const currentSelections = [{ partOptionId: 10 }];
-      database.query
-        .mockResolvedValueOnce([]) // No incompatibilities
-        .mockResolvedValueOnce([]); // No incompatibilities
+      database.query.mockResolvedValueOnce([]); // No incompatibilities
 
       const result = await configService.filterIncompatibleOptions(
         options,
@@ -143,14 +138,12 @@ describe('ProductConfigurationService', () => {
         { partOptionId: 99 },
       ];
       // First selection incompatible with options[0], second with none
-      database.query
-        .mockResolvedValueOnce([
-          {
-            part_option_id: currentSelections[0].partOptionId,
-            incompatible_with_part_option_id: options[0].id,
-          },
-        ])
-        .mockResolvedValueOnce([]);
+      database.query.mockResolvedValueOnce([
+        {
+          part_option_id: currentSelections[0].partOptionId,
+          incompatible_with_part_option_id: options[0].id,
+        },
+      ]);
 
       const result = await configService.filterIncompatibleOptions(
         options,
