@@ -279,4 +279,114 @@ describe('ProductConfigurationService', () => {
       expect(result.message).toBe('Configuration is valid');
     });
   });
+
+  describe('calculateOptionPrices', () => {
+    it('returns options with basePrice, finalPrice, and priceAdjustments', async () => {
+      const testOptions = [
+        { id: 10, name: 'Option A', base_price: 100 },
+        { id: 11, name: 'Option B', base_price: 200 },
+      ];
+      // Mock getPriceAdjustments to return a flat adjustment for Option A, none for Option B
+      jest
+        .spyOn(configService, 'getPriceAdjustments')
+        .mockImplementationOnce(async () => [
+          { price_adjustment: 10, is_percentage: false },
+        ])
+        .mockImplementationOnce(async () => []);
+
+      const result = await configService.calculateOptionPrices(
+        testOptions,
+        1,
+        []
+      );
+
+      expect(result[0]).toMatchObject({
+        id: 10,
+        basePrice: 100,
+        finalPrice: 110,
+        priceAdjustments: [{ price_adjustment: 10, is_percentage: false }],
+      });
+      expect(result[1]).toMatchObject({
+        id: 11,
+        basePrice: 200,
+        finalPrice: 200,
+        priceAdjustments: [],
+      });
+    });
+
+    it('applies percentage adjustments correctly', async () => {
+      const testOptions = [{ id: 12, name: 'Option C', base_price: 100 }];
+      jest
+        .spyOn(configService, 'getPriceAdjustments')
+        .mockResolvedValueOnce([{ price_adjustment: 10, is_percentage: true }]);
+      const result = await configService.calculateOptionPrices(
+        testOptions,
+        1,
+        []
+      );
+      expect(result[0].finalPrice).toBeCloseTo(110);
+    });
+  });
+
+  describe('getPriceAdjustments', () => {
+    it('returns empty array if selections length <= 1', async () => {
+      const result = await configService.getPriceAdjustments(1, [
+        { partOptionId: 10 },
+      ]);
+      expect(result).toEqual([]);
+    });
+
+    it('returns pricing rules for multiple selections', async () => {
+      const pricingRules = [
+        { id: 1, name: 'Combo', price_adjustment: 20, is_percentage: false },
+      ];
+      database.query.mockResolvedValueOnce(pricingRules);
+
+      const result = await configService.getPriceAdjustments(1, [
+        { partOptionId: 10 },
+        { partOptionId: 11 },
+      ]);
+      expect(result).toEqual(pricingRules);
+    });
+  });
+
+  describe('calculateTotalPrice', () => {
+    it('returns correct total with base price, option prices, and adjustments', async () => {
+      database.query
+        .mockResolvedValueOnce([{ base_price: 100 }]) // Product base price
+        .mockResolvedValueOnce([
+          { id: 10, base_price: 20 },
+          { id: 11, base_price: 30 },
+        ]) // Option prices
+        .mockResolvedValueOnce([
+          { price_adjustment: 10, is_percentage: false },
+          { price_adjustment: 10, is_percentage: true },
+        ]); // Adjustments
+
+      const selectedOptions = [{ partOptionId: 10 }, { partOptionId: 11 }];
+      const result = await configService.calculateTotalPrice(
+        1,
+        selectedOptions
+      );
+
+      // Calculation: (100 + 20 + 30) + 10 = 160, then *1.10 = 176
+      expect(result.basePrice).toBe(100);
+      expect(result.optionPriceSum).toBe(50);
+      expect(result.adjustments.length).toBe(2);
+      expect(result.totalPrice).toBeCloseTo(176);
+    });
+
+    it('returns total with no options and no adjustments', async () => {
+      database.query
+        .mockResolvedValueOnce([{ base_price: 100 }]) // Product base price
+        .mockResolvedValueOnce([]) // Option prices
+        .mockResolvedValueOnce([]); // Adjustments
+
+      const result = await configService.calculateTotalPrice(1, []);
+      expect(result.basePrice).toBe(100);
+      expect(result.optionPriceSum).toBe(0);
+      expect(result.adjustments).toEqual([]);
+      expect(result.totalPrice).toBe(100);
+    });
+  });
 });
