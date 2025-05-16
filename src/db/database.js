@@ -20,6 +20,27 @@ class SQLiteDatabase {
       let processedSql = sql;
       let processedParams = params;
 
+      // Handle IN clause with array parameter
+      if (
+        sql.includes(' IN (?)') &&
+        params.length === 1 &&
+        Array.isArray(params[0])
+      ) {
+        const arrayParam = params[0];
+
+        if (arrayParam.length === 0) {
+          // Handle empty array case - use a condition that's always false
+          processedSql = sql.replace('IN (?)', 'IN (-1)');
+          processedParams = [];
+        } else {
+          // Create a placeholder for each array item
+          const placeholders = arrayParam.map(() => '?').join(',');
+          processedSql = sql.replace('IN (?)', `IN (${placeholders})`);
+          // Flatten the array for parameters
+          processedParams = arrayParam;
+        }
+      }
+
       // Check if the query is a SELECT
       const isSelect = processedSql.trim().toLowerCase().startsWith('select');
 
