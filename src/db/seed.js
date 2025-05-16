@@ -84,6 +84,20 @@ async function seedDatabase() {
       );
     }
 
+    // Insert inventory
+    for (const inv of exampleData.inventory) {
+      await db.query(
+        'INSERT INTO Inventory (part_option_id, quantity, in_stock, expected_restock_date) VALUES (?, ?, ?, ?)',
+        [
+          inv.part_option_id,
+          inv.quantity,
+          inv.in_stock,
+          inv.expected_restock_date,
+        ]
+      );
+    }
+
+
     console.debug('Database seeded successfully!'.green);
   } catch (error) {
     console.error('Error seeding database'.red, error);
