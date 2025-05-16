@@ -54,25 +54,38 @@ class ProductConfigurationService {
       return options;
     }
 
-    const incompatibleOptionIds = new Set();
+    const incompatibleOptions = [];
 
-    // Get all incompatible combinations involving current selections
-    for (const selection of currentSelections) {
-      const incompatibilities = await this.database.query(
-        `SELECT incompatible_with_part_option_id 
+    // Get all incompatible combinations involving current options
+    for (const option of options) {
+      incompatibleOptions.push(
+        ...(await this.database.query(
+          `SELECT incompatible_with_part_option_id, part_option_id
          FROM RuleConditions rc
          JOIN IncompatibilityRules ir ON rc.rule_id = ir.id
          WHERE rc.part_option_id = ? AND ir.active = TRUE`,
-        [selection.partOptionId]
+          [option.id]
+        ))
       );
-
-      incompatibilities.forEach((item) => {
-        incompatibleOptionIds.add(item.incompatible_with_part_option_id);
-      });
     }
 
     // Filter out incompatible options
-    return options.filter((option) => !incompatibleOptionIds.has(option.id));
+    return options.filter(
+      // get all options for which
+      (option) =>
+        // none of the current selections
+        !currentSelections.some((selection) =>
+          // have an incompatibility between
+          incompatibleOptions.some(
+            (conflict) =>
+              // the currently-inspected option
+              option.id === conflict.part_option_id &&
+              // and the current selection
+              conflict.incompatible_with_part_option_id ===
+                selection.partOptionId
+          )
+        )
+    );
   }
 
   /**
