@@ -20,25 +20,31 @@ class SQLiteDatabase {
       let processedSql = sql;
       let processedParams = params;
 
-      // Handle IN clause with array parameter
+      // Handle IN clause with array parameters
       if (
         sql.includes(' IN (?)') &&
-        params.length === 1 &&
-        Array.isArray(params[0])
+        params.some((param) => Array.isArray(param))
       ) {
-        const arrayParam = params[0];
+        processedSql = sql;
+        processedParams = [];
 
-        if (arrayParam.length === 0) {
-          // Handle empty array case - use a condition that's always false
-          processedSql = sql.replace('IN (?)', 'IN (-1)');
-          processedParams = [];
-        } else {
-          // Create a placeholder for each array item
-          const placeholders = arrayParam.map(() => '?').join(',');
-          processedSql = sql.replace('IN (?)', `IN (${placeholders})`);
-          // Flatten the array for parameters
-          processedParams = arrayParam;
-        }
+        params.forEach((param, idx) => {
+          if (processedSql.includes('IN (?)')) {
+            if (param.length === 0) {
+              // Replace only the first occurrence of IN (?) for this param
+              processedSql = processedSql.replace('IN (?)', 'IN (-1)');
+            } else {
+              const placeholders = param.map(() => '?').join(',');
+              processedSql = processedSql.replace(
+                'IN (?)',
+                `IN (${placeholders})`
+              );
+              processedParams.push(...param);
+            }
+          } else {
+            processedParams.push(param);
+          }
+        });
       }
 
       // Check if the query is a SELECT
